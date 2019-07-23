@@ -185,7 +185,7 @@ public interface Graph<V, E> {
 	 * @return Old element at Vertex v
 	 * @throws IllegalArgumentException if v is an invalid vertex
 	 */
-	public E replace(Vertex<V> v, E element) throws IllegalArgumentException ;
+	public V replace(Vertex<V> v, V element) throws IllegalArgumentException ;
 	
 	/**
 	 * Replace element at Edge e with {@code element}.
