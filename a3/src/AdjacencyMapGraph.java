@@ -1,6 +1,3 @@
-import java.util.HashMap;
-import java.util.Map;
-
 /**
  * 
  * 
@@ -16,11 +13,11 @@ public class AdjacencyMapGraph<V, E> implements Graph<V, E> {
 	/**
 	 * A vertex of an adjacency map graph representation.
 	 */
-	private class InnerVertex<V> implements Vertex<V> {
+	private class InnerVertex<C> implements Vertex<V> {
 
 		private V element;
 		private Position<Vertex<V>> pos;
-		private Map<Vertex<V>, Edge<E>> outgoing, incoming;
+		private PositionalList<Edge<E>> incidentOut, incidentIn;
 
 		/**
 		 * Construct a new innerVertex instance storing {@code element}.
@@ -30,15 +27,14 @@ public class AdjacencyMapGraph<V, E> implements Graph<V, E> {
 		 */
 		public InnerVertex(V element, boolean isDirected) {
 			this.element = element;
-			outgoing = new HashMap<Vertex<V>, Edge<E>>();
-			// if graph is directed, maintain two map instances
+			incidentOut = new NodePositionalList<Edge<E>>();
+			// if graph is directed, maintain two list instances
 			// outgoing: collection of outgoing incident edges
 			// incoming: collection of incoming incident edges
-			if (isDirected) {
-				incoming = new HashMap<Vertex<V>, Edge<E>>();
-			} else {
-				incoming = outgoing;
-			}
+			if (isDirected)
+				incidentIn = new NodePositionalList<Edge<E>>();
+			else 
+				incidentIn = incidentOut;
 		}
 
 		@Override
@@ -63,12 +59,12 @@ public class AdjacencyMapGraph<V, E> implements Graph<V, E> {
 			this.pos = pos;
 		}
 
-		public Map<Vertex<V>, Edge<E>> getOutgoing() {
-			return outgoing;
+		public PositionalList<Edge<E>> getOutgoing() {
+			return incidentOut;
 		}
 
-		public Map<Vertex<V>, Edge<E>> getIncoming() {
-			return incoming;
+		public PositionalList<Edge<E>> getIncoming() {
+			return incidentIn;
 		}
 		
 		/**
@@ -86,17 +82,24 @@ public class AdjacencyMapGraph<V, E> implements Graph<V, E> {
 	/**
 	 * An edge of an adjacency map graph representation.
 	 */
-	private class InnerEdge<E> implements Edge<E> {
+	private class InnerEdge<D> implements Edge<E> {
 		private E element;
-		private Position<Edge<E>> pos;
 		private Vertex<V>[] endpoints;
+		private Position<Edge<E>> pos;
+		private Position<Edge<E>> originIncident;
+		private Position<Edge<E>> destinationIncident;
 
 		@SuppressWarnings("unchecked")
 		public InnerEdge(Vertex<V> u, Vertex<V> v, E element) {
 			this.element = element;
 			endpoints = (Vertex<V>[]) new Vertex[] { u, v };
+			InnerVertex<V> vertexOrigin = validateV(u);
+			InnerVertex<V> vertexDestin = validateV(v);
+			
+			originIncident = vertexOrigin.getOutgoing().addLast(this);
+			destinationIncident = vertexDestin.getIncoming().addLast(this);
 		}
-
+		
 		@Override
 		public E getElement() {
 			return element;
@@ -122,6 +125,24 @@ public class AdjacencyMapGraph<V, E> implements Graph<V, E> {
 		public Vertex<V>[] getEndpoints() {
 			return endpoints;
 		}
+		
+		public Position<Edge<E>> getOriginIncident() {
+			return originIncident;
+		}
+		
+		public Position<Edge<E>> getDestinationIncident() {
+			return destinationIncident;
+		}
+		
+		/*
+		public void setOriginIncident(Position<Edge<E>> originIncident) {
+			this.originIncident = originIncident;
+		}
+
+		public void setDestinationIncident(Position<Edge<E>> destinationIncident) {
+			this.destinationIncident = destinationIncident;
+		}
+		*/
 		
 		/**
 		 * Validates this Edge belongs to current graph.
@@ -160,7 +181,8 @@ public class AdjacencyMapGraph<V, E> implements Graph<V, E> {
 	 * @return An InnerVertex object if v is valid
 	 * @throws IllegalArgumentException if v is not a valid InnerVertex
 	 */
-	private InnerVertex<V> validate(Vertex<V> v) throws IllegalArgumentException {
+	@SuppressWarnings("unchecked")
+	private InnerVertex<V> validateV(Vertex<V> v) throws IllegalArgumentException {
 		if (!(v instanceof InnerVertex))
 			throw new IllegalArgumentException("Not a InnerVertex");
 		InnerVertex<V> vertex = (InnerVertex<V>) v;
@@ -177,7 +199,8 @@ public class AdjacencyMapGraph<V, E> implements Graph<V, E> {
 	 * @return An InnerVertex object if e is valid
 	 * @throws IllegalArgumentException if e is not a valid InnerEdge
 	 */
-	private InnerEdge<E> validate(Edge<E> e) throws IllegalArgumentException {
+	@SuppressWarnings("unchecked")
+	private InnerEdge<E> validateE(Edge<E> e) throws IllegalArgumentException {
 		if (!(e instanceof InnerEdge))
 			throw new IllegalArgumentException("Not a InnerEdge");
 		InnerEdge<E> edge = (InnerEdge<E>) e;
@@ -209,32 +232,56 @@ public class AdjacencyMapGraph<V, E> implements Graph<V, E> {
 
 	@Override
 	public Edge<E> getEdge(Vertex<V> u, Vertex<V> v) throws IllegalArgumentException {
-		InnerVertex<V> origin = validate(u);
-		return origin.getOutgoing().get(v);
+		InnerVertex<V> origin = validateV(u);
+		InnerVertex<V> destination = validateV(v);
+		
+		PositionalList<Edge<E>> incident; // incident list
+		Position<Edge<E>> incidentEdge; // node in incident list
+		InnerEdge<E> edge; // actual edge (element of incident node)
+		
+		// Choose the vertex with the smaller degree
+		if (origin.getOutgoing().size() < destination.getIncoming().size())
+			incident = origin.getOutgoing();
+		else
+			incident = destination.getIncoming();
+		
+		incidentEdge = incident.first();
+				
+		for (int i = 0; i < incident.size(); i++) {
+			edge = validateE(incidentEdge.getElement());
+			Vertex<V>[] varr = edge.getEndpoints();
+			if ( (varr[0].equals(origin) && varr[1].equals(destination)) || (varr[0].equals(destination) && varr[1].equals(origin)) ) { 
+				return edge;
+			}
+			// get next node in incident list
+			incidentEdge = incident.after(incidentEdge);	
+		}
+		// if u, v are non adjacent
+		return null;
 	}
 
 	@Override
 	public int inDegree(Vertex<V> v) throws IllegalArgumentException {
-		InnerVertex<V> vertex = validate(v);
+		InnerVertex<V> vertex = validateV(v);
 		return vertex.getIncoming().size();
 	}
 
 	@Override
 	public int OutDegree(Vertex<V> v) throws IllegalArgumentException {
-		InnerVertex<V> vertex = validate(v);
+		InnerVertex<V> vertex = validateV(v);
 		return vertex.getOutgoing().size();
 	}
 
 	@Override
 	public Iterable<Edge<E>> incomingEdges(Vertex<V> v) throws IllegalArgumentException {
-		InnerVertex<V> vertex = validate(v);
-		return vertex.getIncoming().values();
+		InnerVertex<V> vertex = validateV(v);
+		return (NodePositionalList<Edge<E>>) vertex.getIncoming();
 	}
 
 	@Override
 	public Iterable<Edge<E>> outgoingEdges(Vertex<V> v) throws IllegalArgumentException {
-		InnerVertex<V> vertex = validate(v);
-		return vertex.getOutgoing().values();
+		InnerVertex<V> vertex = validateV(v);
+		return (NodePositionalList<Edge<E>>) vertex.getOutgoing();
 	}
 	
 	@Override
@@ -244,14 +291,14 @@ public class AdjacencyMapGraph<V, E> implements Graph<V, E> {
 
 	@Override
 	public Vertex<V>[] endVerticles(Edge<E> e) throws IllegalArgumentException {
-		InnerEdge<E> edge = validate(e);
+		InnerEdge<E> edge = validateE(e);
 		return edge.getEndpoints();
 	}
 
 	@Override
 	public Vertex<V> opposite(Vertex<V> v, Edge<E> e) throws IllegalArgumentException {
-		InnerVertex<V> vertex = validate(v);
-		InnerEdge<E> edge = validate(e);
+		InnerVertex<V> vertex = validateV(v);
+		InnerEdge<E> edge = validateE(e);
 		Vertex<V>[] varr = edge.getEndpoints();
 		// Check if v is incident to e
 		if (varr[0] != vertex || varr[1] != vertex)
@@ -269,49 +316,57 @@ public class AdjacencyMapGraph<V, E> implements Graph<V, E> {
 
 	@Override
 	public Edge<E> insertEdge(Vertex<V> u, Vertex<V> v, E element) throws IllegalArgumentException {
-		InnerVertex<V> vertexA = validate(u);
-		InnerVertex<V> vertexB = validate(v);
+		InnerVertex<V> vertexA = validateV(u);
+		InnerVertex<V> vertexB = validateV(v);
+		
 		// Check if u and v already has an edge between
-		if (getEdge(vertexA, vertexB) != null)
-			throw new IllegalArgumentException("Vertex u and v already contains an edge");
-		// Create edge, add to end of edges List
+		Edge<E> e = getEdge(vertexA, vertexB);
+		if (e != null) {
+			replace(e, element);
+			return e;
+		}
+		// Else create edge, add to end of edges List
 		InnerEdge<E> edge = new InnerEdge<E>(u, v, element);
 		edge.setPos(edges.addLast(edge));
-		// Add entry to Incident Out and Incident In Maps
-		vertexA.getOutgoing().put(vertexB, edge);
-		vertexB.getIncoming().put(vertexA, edge);
+
 		return edge;
 	}
 
 	@Override
 	public void removeVertex(Vertex<V> v) throws IllegalArgumentException {
-		InnerVertex<V> vertex = validate(v);
+		InnerVertex<V> vertex = validateV(v);
 		// Remove edges
-		for (Edge<E> incidentEdge : vertex.getOutgoing().values())
+		for (Edge<E> incidentEdge : (NodePositionalList<Edge<E>>) vertex.getOutgoing())
 			removeEdge(incidentEdge);
-		for (Edge<E> incidentEdge : vertex.getIncoming().values())
+		for (Edge<E> incidentEdge : (NodePositionalList<Edge<E>>) vertex.getIncoming())
 			removeEdge(incidentEdge);
-		// Remove vertex
+		// remove vertex
 		vertices.remove(vertex.getPos());
 	}
 
 	@Override
 	public void removeEdge(Edge<E> e) throws IllegalArgumentException {
-		InnerEdge<E> edge = validate(e);
+		InnerEdge<E> edge = validateE(e);
 		Vertex<V>[] varr = edge.getEndpoints();
-		InnerVertex<V> vertexA = validate(varr[0]);
-		InnerVertex<V> vertexB = validate(varr[1]);
-		vertexA.getOutgoing().remove(vertexB, edge);
-		vertexB.getIncoming().remove(vertexA, edge);
+		InnerVertex<V> vertexA = validateV(varr[0]);
+		InnerVertex<V> vertexB = validateV(varr[1]);
+		
+		// removes incident nodes from incident list of each vertex
+		vertexA.getOutgoing().remove(edge.getOriginIncident());
+		vertexB.getIncoming().remove(edge.getDestinationIncident());
+		
+		// remove edge
+		edges.remove(edge.getPos());
 		
 	}
 
 	@Override
 	public boolean isDirected(Edge<E> e) throws IllegalArgumentException {
-		InnerEdge<E> edge = validate(e);
+		InnerEdge<E> edge = validateE(e);
+		edge.validate(this);
 		return isDirected;
 	}
-
+	
 	@Override
 	public Edge<E> insertDirectedEdge(Vertex<V> v, Vertex<V> w, E o) throws IllegalArgumentException {
 		return insertEdge(v, w, o);
@@ -319,14 +374,14 @@ public class AdjacencyMapGraph<V, E> implements Graph<V, E> {
 
 	@Override
 	public boolean areAdjacent(Vertex<V> v, Vertex<V> w) throws IllegalArgumentException {
-		InnerVertex<V> vertexA = validate(v);
-		InnerVertex<V> vertexB = validate(w);
+		InnerVertex<V> vertexA = validateV(v);
+		InnerVertex<V> vertexB = validateV(w);
 		return (getEdge(vertexA, vertexB) != null);
 	}
 
 	@Override
 	public V replace(Vertex<V> v, V element) throws IllegalArgumentException {
-		InnerVertex<V> vertex = validate(v);
+		InnerVertex<V> vertex = validateV(v);
 		V old = vertex.getElement();
 		vertex.setElement(element);
 		return old;
@@ -334,7 +389,7 @@ public class AdjacencyMapGraph<V, E> implements Graph<V, E> {
 
 	@Override
 	public E replace(Edge<E> e, E element) throws IllegalArgumentException {
-		InnerEdge<E> edge = validate(e);
+		InnerEdge<E> edge = validateE(e);
 		E old = edge.getElement();
 		edge.setElement(element);
 		return old;
