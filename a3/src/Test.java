@@ -68,7 +68,7 @@ public class Test {
 		
 		System.out.println(g.toString());
 		
-		System.out.println(shortestPath(g, s));
+		System.out.println(shortestPath(g, x));
 		
 	}
 
@@ -94,18 +94,19 @@ public class Test {
 		
 		// INIT-SINGLE-SOURCE
 		for (Vertex<V> v : g.vertices()) {
-			d.put(v, Integer.MAX_VALUE);
-			predecessor.put(v, null);
-			pq.add(v);
-			/*
 			if (v == src)
 				d.put(v, 0);
 			else
 				d.put(v, Integer.MAX_VALUE);
-			*/
+			predecessor.put(v, null);
+			pq.add(v);
 		}
+		/*
 		d.put(src, 0);
-			
+		pq.remove(src);
+		pq.add(src);
+		*/
+		
 		// priority queue not empty, extact-min
 		while(!pq.isEmpty()) {
 			Vertex<V> entry = pq.poll(); //get min
