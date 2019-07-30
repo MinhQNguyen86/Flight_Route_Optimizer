@@ -1,7 +1,3 @@
-import java.util.HashMap;
-import java.util.Map;
-import java.util.PriorityQueue;
-
 /**
  * 
  * 
@@ -252,8 +248,12 @@ public class AdjacencyListGraph<V, E> implements Graph<V, E> {
 		for (int i = 0; i < incident.size(); i++) {
 			edge = validateE(incidentEdge.getElement());
 			Vertex<V>[] varr = edge.getEndpoints();
-			if ( (varr[0].equals(origin) && varr[1].equals(destination)) || (varr[0].equals(destination) && varr[1].equals(origin)) ) { 
+			if ( ( isDirected && varr[0].equals(origin) && varr[1].equals(destination) ) ) { //|| ( varr[0].equals(destination) && varr[1].equals(origin)) ) { 
 				return edge;
+			} else if (!isDirected) {
+				if ( (varr[0].equals(origin) && varr[1].equals(destination)) || ( varr[0].equals(destination) && varr[1].equals(origin)) ) {
+					return edge;
+				}
 			}
 			// get next node in incident list
 			incidentEdge = incident.after(incidentEdge);	
@@ -362,7 +362,7 @@ public class AdjacencyListGraph<V, E> implements Graph<V, E> {
 		
 	}
 
-	@Override
+	@Override	
 	public boolean isDirected(Edge<E> e) throws IllegalArgumentException {
 		InnerEdge<E> edge = validateE(e);
 		edge.validate(this);
