@@ -10,7 +10,7 @@ public class Test {
 
 	public static void main(String[] args) {
 
-		AdjacencyListGraph<String, Integer> g = new AdjacencyListGraph<>(true);
+		AdjacencyListGraph<String, Integer> g = new AdjacencyListGraph<>(false);
 //		Vertex<String> red = g.insertVertex("Red");
 //		Vertex<String> blue = g.insertVertex("Blue");
 //		Vertex<String> green = g.insertVertex("Green");
@@ -28,16 +28,50 @@ public class Test {
 //		System.out.println(g.toString());
 //		System.out.println(g.areAdjacent(red, yellow));
 //
-//		Scanner sc = new Scanner(System.in);
-//
-//		String in;
-//
-//		// add to cloud vertex from min-heap, u
-//		// relax on vertices adjacent to u
-//
-//		while (!(in = sc.nextLine().toUpperCase()).equals("QUIT")) {
-//			// + STRING STRING INT plane (add vertex + edge)
+		// airport names cannot have spaces
+		Map<String, Vertex<String>> airports = new HashMap<String, Vertex<String>>();
+		Scanner sc = new Scanner(System.in);
+		String in = "";
 		
+		while (!(in = sc.nextLine().toUpperCase().trim()).equals("QUIT")) {
+			
+			String[] arr = in.split(" ");
+			
+			switch (arr.length) {
+				case 1:
+					// ? list all connections in memory (lines in the format YYZ JFK 120 plane)
+					if (arr[0].equals("?")) {
+						
+						break;
+					}
+						
+				case 2:
+					// ? YYZ or - YYZ list all connections from 
+					if (arr[0].equals("?")) {
+						
+					} else if (arr[0].equals("-")) {
+						// try to remove vertex from map and from graph
+						if (airports.remove(arr[1]) != null)
+							g.removeVertex(airports.get(arr[1]));
+						break;
+					}
+				case 3:
+					// ? YYZ LAX
+				case 5:
+					// +/- YYZ JFK 120 plane
+					if (arr[0].equals("+")) {
+						//Vertex<String> vertexA = g.insertEdge(u, v, element)
+					} else if (arr[1].equals("-")) {
+						
+					}
+				default:
+					System.out.println("Unknown command");
+					break;
+			}
+			
+			
+			// + STRING STRING INT plane (add vertex + edge)
+			
 			// - STRING (remove vertex)
 		 
 			// - STRING STRING INT plane (remove edge)
@@ -45,9 +79,8 @@ public class Test {
 			// ? STRING (list edges + opposite)
 		
 			// ? STRING STRING (quickest route; print total duration and list each connection
-//		}
-//
-//		sc.close();
+		}
+
 		
 		Vertex<String> s = g.insertVertex("S");
 		Vertex<String> t = g.insertVertex("T");
