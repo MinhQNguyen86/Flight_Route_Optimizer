@@ -1,6 +1,4 @@
 /**
- * 
- * 
  * @author Minh Nguyen
  * @author Christopher Nguyen
  */
@@ -446,6 +444,11 @@ public class AdjacencyListGraph<V, E> implements Graph<V, E> {
 
 	}
 
+	/**
+	 * 
+	 * @param e
+	 * @return
+	 */
 	public String pathBetweenVertex(Edge<E> e) {
 		InnerEdge<E> edge = validateE(e);
 		Vertex<V>[] endPoints = endVertices(edge);
