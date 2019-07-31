@@ -1,10 +1,8 @@
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Scanner;
-import java.util.Set;
 
 public class Test {
 
@@ -33,9 +31,14 @@ public class Test {
 		Scanner sc = new Scanner(System.in);
 		String in = "";
 		
-		while (!(in = sc.nextLine().toUpperCase().trim()).equals("QUIT")) {
+		while (!(in = sc.nextLine().trim()).equalsIgnoreCase("QUIT")) {
 			
 			String[] arr = in.split(" ");
+			
+			Vertex<String> origin;
+			Vertex<String> destination;
+			Edge<Integer> edge;
+			
 			
 			switch (arr.length) {
 				case 1:
@@ -47,23 +50,78 @@ public class Test {
 						
 				case 2:
 					// ? YYZ or - YYZ list all connections from 
+					
+					// TODO: case where YYZ is different from yyz
 					if (arr[0].equals("?")) {
-						
+						// Vertex doesn't exist
+						if (airports.get(arr[1]) == null)
+							System.out.println("Airport doesn't exist");
+						else {
+							origin = airports.get(arr[1]);
+							for (Edge<Integer> e : g.outgoingEdges(origin))
+								System.out.println(g.pathBetweenVertex(e));
+						}
+
 					} else if (arr[0].equals("-")) {
 						// try to remove vertex from map and from graph
 						if (airports.remove(arr[1]) != null)
 							g.removeVertex(airports.get(arr[1]));
+						else
+							System.out.println("Airport doesn't exist");
 						break;
 					}
 				case 3:
 					// ? YYZ LAX
 				case 5:
+//					Vertex<String> origin;
+//					Vertex<String> destination;
+//					Edge<Integer> edge;
+					
 					// +/- YYZ JFK 120 plane
 					if (arr[0].equals("+")) {
-						//Vertex<String> vertexA = g.insertEdge(u, v, element)
+						// First vertex already exist in graph, but second doesn't
+						if (airports.containsKey(arr[1]) && !airports.containsKey(arr[2])) {
+							origin = airports.get(arr[1]);
+							destination = g.insertVertex(arr[2]);
+						// Second vertex already exist in graph, but first doesn't
+						} else if (!airports.containsKey(arr[1]) && airports.containsKey(arr[2]) ) {
+							origin = g.insertVertex(arr[1]);
+							destination = airports.get(arr[2]);
+						// Both vertex do not exist in graph
+						} else if (!airports.containsKey(arr[1]) && !airports.containsKey(arr[2])) {
+							origin = g.insertVertex(arr[1]);
+							destination = g.insertVertex(arr[2]);
+						// Both vertex already exist in graph
+						} else {
+							origin = airports.get(arr[1]);
+							destination = airports.get(arr[2]);
+						}
+						
+						airports.put(arr[1], origin);
+						airports.put(arr[2], destination);
+						edge = g.insertEdge(origin, destination, Integer.parseInt(arr[3]), arr[4]);
+						
 					} else if (arr[1].equals("-")) {
+						// Does not contain one or more key
+						if (!airports.containsKey(arr[1]) || !airports.containsKey(arr[2])) 
+							System.out.println("One or more airport(s) does not exist");
+						else {
+							origin = airports.get(arr[1]);
+							destination = airports.get(arr[2]);
+							edge = g.getEdge(origin, destination);
+							
+							String vehicle = g.pathBetweenVertex(origin, destination).split(" ")[4];
+							
+							// check if edge is valid
+							if(g.areAdjacent(origin, destination) && edge.getElement() == Integer.parseInt(arr[3]) && vehicle.equals(arr[4]))
+								g.removeEdge(edge);
+							else
+								System.out.println("Edge is invalid (i.e. doesn't exist, wrong distance, or wrong vehicle");
+						}
 						
 					}
+					
+					break;
 				default:
 					System.out.println("Unknown command");
 					break;
@@ -110,7 +168,7 @@ public class Test {
 		// predecessor/distance for shortest path
 		Map<Vertex<V>, Integer> d = new HashMap<Vertex<V>, Integer>();
 		Map<Vertex<V>, Vertex<V>> predecessor = new HashMap<Vertex<V>, Vertex<V>>();
-
+		
 		Map<Vertex<V>, Integer> cloud = new HashMap<Vertex<V>, Integer>();
 		
 		//AdjacencyListGraph<Vertex<V>, Edge<E>> cloud = new AdjacencyListGraph<Vertex<V>, Edge<E>>(false);

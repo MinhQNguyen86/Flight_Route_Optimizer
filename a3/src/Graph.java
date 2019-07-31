@@ -155,7 +155,7 @@ public interface Graph<V, E> {
 	 * @return
 	 * @throws IllegalArgumentException if e is not a valid edge
 	 */
-	public Vertex<V>[] endVerticles(Edge<E> e) throws IllegalArgumentException;
+	public Vertex<V>[] endVertices(Edge<E> e) throws IllegalArgumentException;
 
 	/**
 	 * Returns the Vertex that is opposite Vertex v on Edge e.
