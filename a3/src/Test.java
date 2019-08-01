@@ -38,7 +38,7 @@ public class Test {
 			Vertex<String> origin;
 			Vertex<String> destination;
 			Edge<Integer> edge;
-			System.out.println(arr.length);
+
 			switch (arr.length) {
 			case 1:
 				// ? list all connections in memory (lines in the format YYZ JFK 120 plane)
@@ -82,11 +82,17 @@ public class Test {
 				
 					Map<Vertex<String>, Edge<Integer>> shortest = spTree(g, origin, shortestValue);
 					// start from origin
-					
+					System.out.println(shortest.size());
+					for (int i = 0; i < shortest.size()-1; i++) {
+						edge = shortest.get(destination);
+						System.out.println(g.pathBetweenVertex(edge));
+						destination = g.opposite(destination, edge);
+					}
 					
 					//g.pathBetweenVertex()
 					total = shortestValue.get(destination);
-					System.out.println();
+					System.out.println("Total Distance: " + total);
+					break;
 				}
 
 			case 5:
@@ -250,8 +256,9 @@ public class Test {
 				for (Edge<Integer> e : g.incomingEdges(v)) {
 					Vertex<V> u = g.opposite(v, e);
 					int weight = e.getElement();
-					if (d.get(v) == d.get(u) + weight)
+					if (d.get(v) == d.get(u) + weight) {
 						tree.put(v, e);
+					}
 				}
 			}
 		}

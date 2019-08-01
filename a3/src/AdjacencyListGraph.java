@@ -207,7 +207,7 @@ public class AdjacencyListGraph<V, E> implements Graph<V, E> {
 	@SuppressWarnings("unchecked")
 	private InnerEdge<E> validateE(Edge<E> e) throws IllegalArgumentException {
 		if (!(e instanceof InnerEdge))
-			throw new IllegalArgumentException("Not a InnerEdge");
+			throw new IllegalArgumentException("Not an InnerEdge");
 		InnerEdge<E> edge = (InnerEdge<E>) e;
 		// Check if Vertex is a part of this graph
 		if (!edge.validate(this))
@@ -358,9 +358,9 @@ public class AdjacencyListGraph<V, E> implements Graph<V, E> {
 	 */
 	public Edge<E> insertEdge(Vertex<V> u, Vertex<V> v, E element, String transportation)
 			throws IllegalArgumentException {
-		InnerEdge<E> edge = validateE(insertEdge(u, v, element));
-		edge.setModeOfTransportation(transportation);
-		return edge;
+		InnerEdge<E> e = validateE(insertEdge(u, v, element));
+		e.setModeOfTransportation(transportation);
+		return e;
 	}
 
 	@Override
