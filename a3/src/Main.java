@@ -1,10 +1,8 @@
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Stack;
@@ -31,12 +29,13 @@ public class Main {
 //		System.out.println(g.toString());
 //		System.out.println(g.areAdjacent(red, yellow));
 
-		
 		// Airport names cannot have spaces
+		
+		// Holds a Map with keys being name of airports and value being the Vertex of each airport
 		Map<String, Vertex<String>> airports = new HashMap<String, Vertex<String>>();
+		
 		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
 		String in = "";
-
 		while ( (in = br.readLine()) != null && !(in.trim().equalsIgnoreCase("QUIT")) ) {
 
 			String[] arr = in.split(" ");
@@ -51,13 +50,12 @@ public class Main {
 				if (arr[0].equals("?")) {
 					for (Edge<Integer> e : g.edges())
 						System.out.println(g.pathBetweenVertex(e));
-					break;
-				}
+				} else
+					System.out.println("Commands with 1 argument must start with '?'");
+				break;
 			case 2:
 				// ? YYZ list all connections
 				// - YYZ delete airport vertex
-
-				// TODO: case where YYZ is different from yyz
 				if (arr[0].equals("?")) {
 					// Vertex doesn't exist
 					if (airports.get(arr[1]) == null)
@@ -67,15 +65,15 @@ public class Main {
 						for (Edge<Integer> e : g.outgoingEdges(origin))
 							System.out.println(g.pathBetweenVertex(e));
 					}
-					break;
 				} else if (arr[0].equals("-")) {
 					// try to remove vertex from map and from graph
 					if (airports.get(arr[1]) != null)
 						g.removeVertex(airports.remove(arr[1]));
 					else
 						System.out.println("Airport doesn't exist");
-					break;
-				}
+				} else
+					System.out.println("Commands with 2 arguments must start with '-/?'");
+				break;
 			case 3:
 				// ? YYZ LAX quickest route
 				if (arr[0].equals("?") && airports.get(arr[1]) != null && airports.get(arr[2]) != null) {
@@ -88,16 +86,25 @@ public class Main {
 					Map<Vertex<String>, Edge<Integer>> shortest = spTree(g, origin, shortestValue);
 					
 					// Total Distance
-					total = shortestValue.get(destination);
-					System.out.println(total);
 					
+					total = shortestValue.get(destination);
+					
+					
+					if (total != Integer.MAX_VALUE) {
+						System.out.println(total);
+					}
+
 				
 					Stack<String> a = new Stack<String>();
 					// Goes through shortest path
+					
 					while (counter < total) {
 						edge = shortest.get(destination);
+						if (edge == null) {
+							System.out.println("Graph is unconnected");
+							break;
+						}
 						counter += edge.getElement();
-						//System.out.println(g.pathBetweenVertex(edge));
 						a.add(g.pathBetweenVertex(edge));
 						destination = g.opposite(destination, edge);
 					}
@@ -105,12 +112,13 @@ public class Main {
 					while (!a.isEmpty()) {
 						System.out.println(a.pop());
 					}
-					break;
+				} else {
+					System.out.println("Commands with 3 arguments must start with '?' and airports must already exist");
 				}
-
+				break;
 			case 5:
 				// +/- YYZ JFK 120 plane (add/remove edge)
-				if (arr[0].equals("+") && arr[3].matches("(0|[1-9]\\d+)")) {
+				if (arr[0].equals("+") && arr[3].matches("[0-9]+")) {
 					// First vertex already exist in graph, but second doesn't
 					if (airports.containsKey(arr[1]) && !airports.containsKey(arr[2])) {
 						origin = airports.get(arr[1]);
@@ -131,8 +139,7 @@ public class Main {
 					airports.put(arr[1], origin);
 					airports.put(arr[2], destination);
 					edge = g.insertEdge(origin, destination, Integer.parseInt(arr[3]), arr[4]);
-					break;
-				} else if (arr[0].equals("-") && arr[3].matches("(0|[1-9]\\d+)")) {
+				} else if (arr[0].equals("-") && arr[3].matches("[0-9]+")) {
 					// Does not contain one or more key
 					if (!airports.containsKey(arr[1]) || !airports.containsKey(arr[2]))
 						System.out.println("One or more airport(s) does not exist");
@@ -150,12 +157,9 @@ public class Main {
 						else
 							System.out.println("Edge is invalid (i.e. doesn't exist, wrong distance, or wrong vehicle");
 					}
-					break;
-				} else {
-					// TODO: Never reaches default
-					System.out.println("Command must start with + or - and distance must be an integer");
-					break;
-				}
+				} else 
+					System.out.println("Commands with 5 arguments must start with '+/-' and 4th argument must be an integer");
+				break;
 			default:
 				System.out.println("Unknown command");
 				break;
