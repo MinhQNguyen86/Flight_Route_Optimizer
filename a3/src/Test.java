@@ -1,12 +1,14 @@
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.PriorityQueue;
-import java.util.Scanner;
 
 public class Test {
 
-	public static void main(String[] args) {
+	public static void main(String[] args) throws IOException {
 
 		AdjacencyListGraph<String, Integer> g = new AdjacencyListGraph<>(false);
 //		Vertex<String> red = g.insertVertex("Red");
@@ -25,16 +27,17 @@ public class Test {
 //		// g.removeEdge(e1);
 //		System.out.println(g.toString());
 //		System.out.println(g.areAdjacent(red, yellow));
-//
-		// airport names cannot have spaces
+
+		
+		// Airport names cannot have spaces
 		Map<String, Vertex<String>> airports = new HashMap<String, Vertex<String>>();
-		Scanner sc = new Scanner(System.in);
+		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
 		String in = "";
 
-		while (!(in = sc.nextLine().trim()).equalsIgnoreCase("QUIT")) {
+		while ( (in = br.readLine()) != null && !(in.trim().equalsIgnoreCase("QUIT")) ) {
 
 			String[] arr = in.split(" ");
-
+			
 			Vertex<String> origin;
 			Vertex<String> destination;
 			Edge<Integer> edge;
@@ -47,7 +50,6 @@ public class Test {
 						System.out.println(g.pathBetweenVertex(e));
 					break;
 				}
-				System.out.println("hi");
 			case 2:
 				// ? YYZ list all connections
 				// - YYZ delete airport vertex
@@ -81,17 +83,18 @@ public class Test {
 					Map<Vertex<String>, Integer> shortestValue = shortestPath(g, origin);
 				
 					Map<Vertex<String>, Edge<Integer>> shortest = spTree(g, origin, shortestValue);
-					// start from origin
-					System.out.println(shortest.size());
-					for (int i = 0; i < shortest.size()-1; i++) {
+					
+					// Total Distance
+					total = shortestValue.get(destination);
+					System.out.println("Total Distance: " + total);
+					
+					//System.out.println(shortest.size());
+					for (int i = 0; i < shortest.size(); i++) {
 						edge = shortest.get(destination);
 						System.out.println(g.pathBetweenVertex(edge));
 						destination = g.opposite(destination, edge);
 					}
 					
-					//g.pathBetweenVertex()
-					total = shortestValue.get(destination);
-					System.out.println("Total Distance: " + total);
 					break;
 				}
 
@@ -139,6 +142,7 @@ public class Test {
 					}
 					break;
 				} else {
+					// TODO: Never reaches default
 					System.out.println("Command must start with + or - and distance must be an integer");
 					break;
 				}
@@ -157,7 +161,7 @@ public class Test {
 			// ? STRING STRING (quickest route; print total duration and list each
 			// connection
 		}
-		sc.close();
+		//sc.close();
 
 		Vertex<String> s = g.insertVertex("S");
 		Vertex<String> t = g.insertVertex("T");

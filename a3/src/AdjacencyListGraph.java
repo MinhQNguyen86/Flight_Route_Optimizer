@@ -156,7 +156,7 @@ public class AdjacencyListGraph<V, E> implements Graph<V, E> {
 		}
 
 		public String toString() {
-			return (String) element;
+			return pathBetweenVertex(this);
 		}
 
 	} // InnerEdge
